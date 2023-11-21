@@ -7,9 +7,10 @@
 
         <% article.forEach((post) => { %>
             <h3><%= post.title %></h3>
-            <p><%= post.content %></p>
+            <p><%= post.content.substring(0, 100)+("........") %><a href="/post/<%= encodeURIComponent(post.title) %>">Read More</a></p>
         <% }) %>
-        
+
+
 
 </body>
 <%- include('partials/footer.ejs') %>

@@ -1,11 +1,13 @@
 const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
+var _ = require('lodash');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended : false}));
 app.set('view engine', 'ejs');
 
 const blogPosts = [];
+const blogs = [];
 
 const homePost = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas eget justo nec nisi sollicitudin aliquam. Nullam fringilla auctor nisi, ac rhoncus urna dignissim id. Suspendisse potenti. Sed eu augue vitae lacus efficitur viverra. Integer id urna vel eros commodo vulputate. Vivamus vel turpis ut orci placerat ultricies.";
 
@@ -43,8 +45,30 @@ blogPosts.push(post);
 res.redirect('/');   
 })
 app.get("/post/:postName",(req,res)=>{
-console.log(req.params.postName);
+
+const usrTitle =_.lowerCase(req.params.postName);
+
+blogPosts.forEach(post => {
+   const postTitle = _.lowerCase(post.title);
+   const postBody = post.content;
+
+   const singlePost ={
+    title : postTitle,
+    content : postBody
+   }
+
+   if(usrTitle === postTitle){
+      
+     res.render("post",{article : singlePost});
+   }else{
+    console.log("not match")
+   }
+    
+});
+
 })
+
+
 app.listen(process.env.port || 3000,()=>{
     console.log("app is runnig on port 3000");
 })
