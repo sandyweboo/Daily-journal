@@ -61,7 +61,7 @@ blogPosts.forEach(post => {
       
      res.render("post",{article : singlePost});
    }else{
-    console.log("not match")
+    res.render("404");
    }
     
 });
