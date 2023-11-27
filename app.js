@@ -2,12 +2,29 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
 var _ = require('lodash');
+const { default: mongoose } = require("mongoose");
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended : false}));
 app.set('view engine', 'ejs');
+const connection = require("mongoose")
+connection.connect("mongodb://localhost:27017/personalblog").then((result)=>{
+    console.log("DB Connceted")
+}).catch((error)=>{
+    console.log(error)
+})
+
 
 const blogPosts = [];
 const blogs = [];
+
+const postSchema = new mongoose.Schema({
+    title: String,
+    content: String,
+    date: { type: Date, default: Date.now },
+  });
+  
+  const Post = mongoose.model('Post', postSchema);
+
 
 const homePost = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas eget justo nec nisi sollicitudin aliquam. Nullam fringilla auctor nisi, ac rhoncus urna dignissim id. Suspendisse potenti. Sed eu augue vitae lacus efficitur viverra. Integer id urna vel eros commodo vulputate. Vivamus vel turpis ut orci placerat ultricies.";
 
@@ -18,8 +35,14 @@ const contact ="Have a question or feedback? We're here to help! Feel free to re
 
 app.get("/",(req, res)=>{
 
-   
-    res.render("home",{content :homePost, article : blogPosts });
+    Post.find().exec()
+    .then((result)=>{
+      //console.log(result)
+      res.render("home",{content :homePost, article : result });
+    })
+    .catch((error)=>{console.log(error)})
+
+    
 });
 
 app.get("/about",(req,res)=>{
@@ -34,39 +57,34 @@ app.get("/compose",(req,res)=>{
     res.render("compose",{ })
   
 })
-app.post("/compose",(req,res)=>{
+app.post("/compose",async(req,res)=>{
   
-const  post ={ 
-    title : req.body.postTitle,
-    content : req.body.postBody
-}
+    const post = new Post({
+        title: req.body.postTitle,
+        content: req.body.postBody,
+      });
+      try {
+        post.save()
+      } catch (error) {
+        console.log(error)
+      }
 
-blogPosts.push(post);
 res.redirect('/');   
 })
-app.get("/post/:postName",(req,res)=>{
+app.get("/post/:postId",(req,res)=>{
 
-const usrTitle =_.lowerCase(req.params.postName);
+const fullPostId =(req.params.postId);
+  Post.findOne({_id :fullPostId}).exec()
+  .then((result)=>{
+   res.render("post",{article : result});
+  })
+  .catch((error)=>{
+    console.log(error)
+  })
 
-blogPosts.forEach(post => {
-   const postTitle = _.lowerCase(post.title);
-   const postBody = post.content;
-
-   const singlePost ={
-    title : postTitle,
-    content : postBody
-   }
-
-   if(usrTitle === postTitle){
-      
-     res.render("post",{article : singlePost});
-   }else{
-    res.render("404");
-   }
-    
 });
 
-})
+
 
 
 app.listen(process.env.port || 3000,()=>{
